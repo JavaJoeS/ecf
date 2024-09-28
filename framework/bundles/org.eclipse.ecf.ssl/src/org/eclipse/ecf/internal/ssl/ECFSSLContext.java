@@ -5,13 +5,14 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.KeyStore;
 import java.security.SecureRandom;
+import java.security.cert.CertificateException;
 import java.util.Optional;
 import javax.net.ssl.*;
 
 public enum ECFSSLContext {
 	SETUP;
 
-	public SSLContext get() {
+	public SSLContext get() throws CertificateException {
 		SSLContext context = null;
 
 		try {
@@ -72,11 +73,17 @@ public enum ECFSSLContext {
 				context.init(kmf.getKeyManagers(), tmf.getTrustManagers(), new SecureRandom());
 				SSLContext.setDefault(context);
 			} catch (Exception ex) {
-				ex.printStackTrace();
+				// ex.printStackTrace();
+				final CertificateException ce = new CertificateException("Certificate setup is not valid"); //$NON-NLS-1$
+				ce.initCause(ex);
+				throw ce;
 			}
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			// e.ECFSSLContext..printStackTrace();
+			final CertificateException ce = new CertificateException("PKI Properties setup is not valid"); //$NON-NLS-1$
+			ce.initCause(e);
+			throw ce;
 		}
 		return context;
 	}

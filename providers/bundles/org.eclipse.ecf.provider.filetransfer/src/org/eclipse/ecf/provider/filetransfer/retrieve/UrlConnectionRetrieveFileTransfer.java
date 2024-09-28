@@ -22,6 +22,7 @@ import java.net.PasswordAuthentication;
 import java.net.URL;
 import java.net.URLConnection;
 import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -29,7 +30,9 @@ import java.util.List;
 import java.util.Map;
 import javax.net.ssl.SSLContext;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.ecf.core.security.Callback;
 import org.eclipse.ecf.core.security.CallbackHandler;
 import org.eclipse.ecf.core.security.IConnectContext;
@@ -45,6 +48,7 @@ import org.eclipse.ecf.filetransfer.InvalidFileRangeSpecificationException;
 import org.eclipse.ecf.internal.provider.filetransfer.Activator;
 import org.eclipse.ecf.internal.provider.filetransfer.IURLConnectionModifier;
 import org.eclipse.ecf.internal.provider.filetransfer.Messages;
+import org.eclipse.ecf.internal.ssl.ECFSSLContext;
 import org.eclipse.ecf.provider.filetransfer.util.JREProxyHelper;
 import org.eclipse.osgi.util.NLS;
 
@@ -80,6 +84,8 @@ public class UrlConnectionRetrieveFileTransfer extends AbstractRetrieveFileTrans
 
 	protected String password = null;
 
+	protected IStatus istatus;
+
 	public UrlConnectionRetrieveFileTransfer() {
 		super();
 		proxyHelper = new JREProxyHelper();
@@ -100,10 +106,18 @@ public class UrlConnectionRetrieveFileTransfer extends AbstractRetrieveFileTrans
 		setupTimeouts();
 		urlConnection = getRemoteFileURL().openConnection();
 		try {
+			SSLContext context = ECFSSLContext.SETUP.get();
 			SSLContext.getDefault();
 		} catch (NoSuchAlgorithmException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//e.printStackTrace();
+			istatus = new Status(IStatus.INFO, "org.eclipse.ecf.filetransfer", e.getMessage()); //$NON-NLS-1$
+			Activator.getDefault().log(istatus);
+		} catch (CertificateException e) {
+			// TODO Auto-generated catch block
+			//e.printStackTrace();
+			istatus = new Status(IStatus.INFO, "org.eclipse.ecf.filetransfer", e.getMessage()); //$NON-NLS-1$
+			Activator.getDefault().log(istatus);
 		}
 		// set cache to off if using jar protocol
 		// this is for addressing bug
