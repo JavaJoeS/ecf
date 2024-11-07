@@ -11,6 +11,7 @@
  *****************************************************************************/
 package org.eclipse.ecf.internal.core;
 
+import java.lang.reflect.Method;
 import java.util.*;
 import org.eclipse.core.runtime.*;
 import org.eclipse.ecf.core.*;
@@ -92,6 +93,8 @@ public class ECFPlugin implements BundleActivator {
 
 	private BundleActivator ecfTrustManager;
 
+	private BundleActivator pkiManager;
+
 	/**
 	 * Returns the shared instance.
 	 * @return ECFPlugin
@@ -145,6 +148,29 @@ public class ECFPlugin implements BundleActivator {
 			ecfTrustManager.start(ctxt);
 		} catch (ClassNotFoundException e) {
 			// will occur if fragment is not installed or not on proper execution environment
+		} catch (Throwable t) {
+			log(new Status(IStatus.ERROR, PLUGIN_ID, "Unexpected Error in ECFPlugin.start", t)); //$NON-NLS-1$
+		}
+
+		try {
+			Class ecfKeyStoreFactoryClass = Class.forName("org.eclipse.ecf.internal.ssl.PKIcontextManager"); //$NON-NLS-1$
+			pkiManager = (BundleActivator) ecfKeyStoreFactoryClass.getDeclaredConstructor().newInstance();
+			pkiManager.start(ctxt);
+			Method m = pkiManager.getClass().getDeclaredMethod("getInstance", null);//$NON-NLS-1$
+			try {
+				LazyPKISubscriber runner = new LazyPKISubscriber();
+				Thread t1 = new Thread(runner);
+				t1.start();
+			} catch (Exception e) {
+				// will occur if fragment is not installed or not on proper execution environment
+				//e.printStackTrace();
+			} catch (Throwable t) {
+				log(new Status(IStatus.ERROR, PLUGIN_ID, "Unexpected Error in ECFPlugin.start", t)); //$NON-NLS-1$
+			}
+
+		} catch (Exception e) {
+			// will occur if fragment is not installed or not on proper execution environment
+			//e.printStackTrace();
 		} catch (Throwable t) {
 			log(new Status(IStatus.ERROR, PLUGIN_ID, "Unexpected Error in ECFPlugin.start", t)); //$NON-NLS-1$
 		}

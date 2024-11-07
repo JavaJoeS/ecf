@@ -26,6 +26,20 @@ public class ECFSSLSocketFactory extends SSLSocketFactory {
 	private String defaultProtocolNames = System.getProperty(DEFAULT_SSL_PROTOCOL);
 
 	private SSLSocketFactory getSSLSocketFactory() throws IOException {
+		try {
+			PKIcontextManager manager = PKIcontextManager.getInstance();
+			sslContext = manager.getSSLContext();
+			// if (sslContext != null) {
+			// System.out.println("ECFSSLSocketFactory getSSLSocketFactory GOT
+			// SOCKET from Manager call");
+			// } else {
+			// System.out.println("ECFSSLSocketFactory getSSLSocketFactory NULL
+			// SSLContext");
+			// }
+		} catch (Exception e) {
+			// might not be set up right or even installed see
+			// org.eclipse.core.pki
+		}
 		if (null == sslContext) {
 			try {
 				sslContext = getSSLContext(defaultProtocolNames);
